@@ -1,0 +1,9 @@
+node_modules/
+public/
+.dockerignore
+.env*
+bitbucket-pipelines.yml
+Dockerfile
+nginx.conf
+package-lock.json
+yarn.lock

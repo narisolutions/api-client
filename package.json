@@ -1,0 +1,57 @@
+{
+    "name": "@narisolutions/request",
+    "private": false,
+    "version": "1.0.0",
+    "type": "module",
+    "description": "Minimal library for handling API requests.",
+    "author": "Nari Solutions LLC",
+    "main": "dist/index.umd.js",
+    "module": "dist/index.es.js",
+    "types": "dist/index.d.ts",
+    "exports": {
+        ".": {
+            "import": "./dist/index.es.js",
+            "types": "./dist/index.d.ts"
+        }
+    },
+    "files": [
+        "/dist"
+    ],
+    "publishConfig": {
+        "access": "public"
+    },
+    "scripts": {
+        "dev": "vite",
+        "build": "tsc && vite build",
+        "preview": "vite preview"
+    },
+    "devDependencies": {
+        "@types/node": "^22.9.3",
+        "typescript": "~5.6.2",
+        "vite": "^5.4.10",
+        "vite-plugin-dts": "^4.3.0"
+    },
+    "dependencies": {
+        "firebase": "^11.0.2"
+    },
+    "keywords": [
+        "xhr",
+        "http",
+        "ajax",
+        "promise",
+        "node"
+    ],
+    "contributors": [
+        "Irakli Ghachava (https://github.com/homosape)",
+        "Giorgi Bregvadze (https://github.com/GBreg19)",
+        "Beka Jalagania (https://github.com/jalagania)"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/narisolutions/request.git"
+    },
+    "bugs": {
+        "url": "https://github.com/narisolutions/request/issues",
+        "email": "irakli.ghachava@nari.ge"
+    }
+}
