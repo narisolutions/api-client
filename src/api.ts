@@ -1,7 +1,7 @@
 import { Auth } from "firebase/auth";
 import { ApiConfig, GetBodyInput, GetHeadersInput, RequestConfig, RequestMethod } from "./types";
 
-class RequestHandler {
+class HttpClient {
     public baseURL: string | null = null;
     protected authType: "Bearer" = "Bearer";
     protected authInstance: Auth | null = null;
@@ -237,4 +237,4 @@ class RequestHandler {
     }
 }
 
-export default RequestHandler;
+export default HttpClient;

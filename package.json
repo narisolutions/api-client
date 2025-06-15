@@ -1,7 +1,7 @@
 {
-    "name": "@narisolutions/request",
+    "name": "@narisolutions/api-client",
     "private": false,
-    "version": "1.1.0",
+    "version": "1.2.0",
     "type": "module",
     "description": "Minimal library for handling API requests.",
     "author": "Nari Solutions LLC",
@@ -48,10 +48,10 @@
     ],
     "repository": {
         "type": "git",
-        "url": "https://github.com/narisolutions/request.git"
+        "url": "https://github.com/narisolutions/api-client.git"
     },
     "bugs": {
-        "url": "https://github.com/narisolutions/request/issues",
+        "url": "https://github.com/narisolutions/api-client/issues",
         "email": "irakli.ghachava@nari.ge"
     }
 }
