@@ -11,7 +11,7 @@ Please note, it's planned to make this library more sophisticated in time.
 ## Usage
 
 ```javascript
-import { HttpClient } from "@narisolutions/request";
+import { HttpClient } from "@narisolutions/api-client";
 
 const api = new HttpClient( { baseURL: "https://api.example.com/v1", ... } );
 
@@ -29,7 +29,7 @@ const getUsers = () => {
 #### TypeScript
 
 ```typescript
-import { HttpClient } from "@narisolutions/request";
+import { HttpClient } from "@narisolutions/api-client";
 
 const api = new HttpClient( { baseURL: "https://api.example.com/v1", ... } );
 
