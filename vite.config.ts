@@ -11,7 +11,7 @@ export default defineConfig({
     build: {
         lib: {
             entry: path.resolve(__dirname, "src/index.ts"),
-            name: "request",
+            name: "api-client",
             fileName: format => `index.${format}.js`,
             formats: ["es"],
         },
@@ -27,5 +27,12 @@ export default defineConfig({
             },
         },
     },
-    plugins: [dts()],
+    plugins: [
+        dts({
+            entryRoot: "src",
+            outDir: "dist/types",
+            include: ["src"],
+            cleanVueFileName: true,
+        }),
+    ],
 });
