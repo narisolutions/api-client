@@ -186,47 +186,38 @@ class HttpClient {
     }
 
     private async getToken(refresh?: boolean) {
+        const maxRetries = 3;
         let retries = 0;
         let token = "";
-        let isInit = false;
 
-        const get = async (refresh?: boolean) => {
+        while (retries < maxRetries) {
             try {
-                if (retries === 3) return;
-
                 const currentUser = this.authInstance?.currentUser;
 
                 if (!currentUser) {
-                    retries++;
-                    const waitMs = !isInit ? 3000 : retries * 1000;
-                    if (!isInit) isInit = true;
-
+                    const waitMs = retries === 0 ? 3000 : retries * 1000;
                     await this.sleep(waitMs);
-                    await get(refresh);
-                } else {
-                    token = await currentUser.getIdToken(refresh);
-                }
-            } catch (e) {
-                if (retries === 3) {
-                    console.error(e);
-                } else {
                     retries++;
-                    await this.sleep();
-                    await get();
+                    continue;
                 }
-            }
-        };
 
-        await get(refresh);
+                token = await currentUser.getIdToken(refresh);
+                break;
+            } catch (err) {
+                retries++;
+                if (retries >= maxRetries) {
+                    console.error(err);
+                    break;
+                }
+                await this.sleep(retries * 1000);
+            }
+        }
 
         if (!token) {
             try {
                 await this.authInstance?.signOut();
             } catch (err) {
-                console.error(
-                    "[HttpClient] Failed to sign out after token error:",
-                    JSON.stringify(err),
-                );
+                console.error("[HttpClient] Failed to sign out after token error:", err);
             }
 
             this.onAuthFailure?.();
