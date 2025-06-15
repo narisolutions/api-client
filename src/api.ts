@@ -11,6 +11,7 @@ class HttpClient {
 
     protected authType: "Bearer" = "Bearer";
     protected authInstance: Auth | null = null;
+    protected onAuthFailure?: () => void;
     protected timeoutMs = 20000;
     protected onTimeout?: (route: string) => void;
     protected headers: Record<string, string> = {};
@@ -24,6 +25,7 @@ class HttpClient {
         if (config.onTimeout) this.onTimeout = config.onTimeout;
         if (config.authType) this.authType = config.authType;
         if (config.authInstance) this.authInstance = config.authInstance;
+        if (config.onAuthFailure) this.onAuthFailure = config.onAuthFailure;
         if (config.headers) this.headers = config.headers;
         if (config.language) this.language = config.language;
     }
@@ -218,7 +220,17 @@ class HttpClient {
         await get(refresh);
 
         if (!token) {
-            await this.authInstance?.signOut();
+            try {
+                await this.authInstance?.signOut();
+            } catch (err) {
+                console.error(
+                    "[HttpClient] Failed to sign out after token error:",
+                    JSON.stringify(err),
+                );
+            }
+
+            this.onAuthFailure?.();
+
             throw new Error(messages[this.language].SESSION_EXPIRED);
         }
 

@@ -22,6 +22,11 @@ type ApiConfig = {
      */
     authInstance?: Auth;
     /**
+     * Optional callback when token acquisition fails after retries.
+     * This runs after the client auto signs the user out and throws.
+     */
+    onAuthFailure?: () => void;
+    /**
      * Request timeout in milliseconds.
      * @default 20000
      */
