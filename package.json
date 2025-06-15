@@ -1,7 +1,7 @@
 {
     "name": "@narisolutions/request",
     "private": false,
-    "version": "1.0.0",
+    "version": "1.1.0",
     "type": "module",
     "description": "Minimal library for handling API requests.",
     "author": "Nari Solutions LLC",

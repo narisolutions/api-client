@@ -9,6 +9,8 @@ class RequestHandler {
     protected headers: Record<string, string> = {};
 
     constructor(config: ApiConfig) {
+        this.validateBaseURL(config.baseURL);
+
         this.baseURL = config.baseURL;
         if (config.timeoutMs) this.timeoutMs = config.timeoutMs;
         if (config.authType) this.authType = config.authType;
@@ -211,6 +213,27 @@ class RequestHandler {
 
     private async sleep(ms: number = 1000) {
         await new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    private validateBaseURL(baseURL: string) {
+        if (!baseURL) {
+            throw new Error("Missing baseURL: You must provide a valid API base URL.");
+        }
+
+        let url: URL;
+        try {
+            url = new URL(baseURL);
+        } catch {
+            throw new Error(
+                `Invalid baseURL: "${baseURL}". It must be a well-formed absolute URL starting with "http://" or "https://".`,
+            );
+        }
+
+        if (!["http:", "https:"].includes(url.protocol)) {
+            throw new Error(
+                `Invalid baseURL protocol: "${baseURL}". Only HTTP(S) URLs are supported (e.g. "https://api.example.com" or "http://localhost:3000").`,
+            );
+        }
     }
 }
 
