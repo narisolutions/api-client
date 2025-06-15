@@ -1,5 +1,8 @@
 import { Auth } from "firebase/auth";
 import { ApiConfig, GetBodyInput, GetHeadersInput, RequestConfig, RequestMethod } from "./types";
+import pkg from "../package.json";
+
+const DEFAULT_CLIENT_VERSION = `${pkg.name}/${pkg.version}`;
 
 class HttpClient {
     public baseURL: string | null = null;
@@ -112,6 +115,7 @@ class HttpClient {
             "Content-Type": "application/json",
             ...customHeaders,
             ...(token && { Authorization: `Bearer ${token}` }),
+            "X-Client-Version": customHeaders?.["X-Client-Version"] ?? DEFAULT_CLIENT_VERSION,
         };
     }
 
