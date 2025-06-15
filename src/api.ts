@@ -6,13 +6,16 @@ class HttpClient {
     protected authType: "Bearer" = "Bearer";
     protected authInstance: Auth | null = null;
     protected timeoutMs = 20000;
+    protected onTimeout?: (route: string) => void;
     protected headers: Record<string, string> = {};
 
     constructor(config: ApiConfig) {
         this.validateBaseURL(config.baseURL);
 
         this.baseURL = config.baseURL;
+
         if (config.timeoutMs) this.timeoutMs = config.timeoutMs;
+        if (config.onTimeout) this.onTimeout = config.onTimeout;
         if (config.authType) this.authType = config.authType;
         if (config.authInstance) this.authInstance = config.authInstance;
         if (config.headers) this.headers = config.headers;
@@ -69,7 +72,9 @@ class HttpClient {
             throw new Error(`Invalid method call. Can't pass data to ${method} request.`);
         }
 
-        const id = setTimeout(() => controller.abort(), timeoutMs);
+        const id = setTimeout(() => {
+            this.onTimeout?.(route), controller.abort();
+        }, timeoutMs);
         const headers = await this.getHeaders({ data, customHeaders, authenticate });
 
         const response = await fetch(this.baseURL + route, {

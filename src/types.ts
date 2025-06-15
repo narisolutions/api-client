@@ -21,6 +21,13 @@ type ApiConfig = {
      */
     timeoutMs?: number;
     /**
+     * Optional callback that is triggered when a request exceeds the configured timeout.
+     * Useful for logging, showing user notifications, or tracking timeouts in monitoring tools.
+     *
+     * @param route - The route (relative path) that timed out
+     */
+    onTimeout?: (route: string) => void;
+    /**
      * Custom headers to send for each request. This takes priority over default headers.
      */
     headers?: Record<string, string>;
