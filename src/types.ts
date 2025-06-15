@@ -1,7 +1,7 @@
 import { Auth } from "firebase/auth";
 import { LanguageCode } from "./i18n";
 
-type ApiConfig = {
+type HttpClientOptions = {
     /**
      * Base URL to be used for api requests.
      * @example "https://api.fake.com/v1"
@@ -44,7 +44,7 @@ type ApiConfig = {
     headers?: Record<string, string>;
 };
 
-type RequestConfig = {
+type HttpRequestOptions = {
     /**
      * Body of the request
      */
@@ -80,4 +80,4 @@ type GetBodyInput = {
 
 type RequestMethod = "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
 
-export type { ApiConfig, RequestConfig, RequestMethod, GetHeadersInput, GetBodyInput };
+export type { HttpClientOptions, HttpRequestOptions, RequestMethod, GetHeadersInput, GetBodyInput };

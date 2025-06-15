@@ -1,5 +1,11 @@
 import { Auth } from "firebase/auth";
-import { ApiConfig, GetBodyInput, GetHeadersInput, RequestConfig, RequestMethod } from "./types";
+import {
+    HttpClientOptions,
+    GetBodyInput,
+    GetHeadersInput,
+    HttpRequestOptions,
+    RequestMethod,
+} from "./types";
 import pkg from "../package.json";
 import { LanguageCode, messages } from "./i18n";
 
@@ -16,7 +22,7 @@ class HttpClient {
     protected onTimeout?: (route: string) => void;
     protected headers: Record<string, string> = {};
 
-    constructor(config: ApiConfig) {
+    constructor(config: HttpClientOptions) {
         this.validateBaseURL(config.baseURL);
 
         this.baseURL = config.baseURL;
@@ -30,7 +36,7 @@ class HttpClient {
         if (config.language) this.language = config.language;
     }
 
-    async get<T>(route: string, config?: Omit<RequestConfig, "data">) {
+    async get<T>(route: string, config?: Omit<HttpRequestOptions, "data">) {
         const response = await this.fetch("GET", route, config);
 
         if (!response.ok) await this.handleError(response);
@@ -38,7 +44,7 @@ class HttpClient {
         return result;
     }
 
-    async post<T>(route: string, config?: RequestConfig) {
+    async post<T>(route: string, config?: HttpRequestOptions) {
         const response = await this.fetch("POST", route, config);
 
         if (!response.ok) await this.handleError(response);
@@ -46,7 +52,7 @@ class HttpClient {
         return result;
     }
 
-    async put<T>(route: string, config?: RequestConfig) {
+    async put<T>(route: string, config?: HttpRequestOptions) {
         const response = await this.fetch("PUT", route, config);
 
         if (!response.ok) await this.handleError(response);
@@ -54,7 +60,7 @@ class HttpClient {
         return result;
     }
 
-    async patch<T>(route: string, config?: RequestConfig) {
+    async patch<T>(route: string, config?: HttpRequestOptions) {
         const response = await this.fetch("PATCH", route, config);
 
         if (!response.ok) await this.handleError(response);
@@ -62,7 +68,7 @@ class HttpClient {
         return result;
     }
 
-    async delete<T>(route: string, config?: Omit<RequestConfig, "data">) {
+    async delete<T>(route: string, config?: Omit<HttpRequestOptions, "data">) {
         const response = await this.fetch("DELETE", route, config);
 
         if (!response.ok) await this.handleError(response);
@@ -70,7 +76,7 @@ class HttpClient {
         return result;
     }
 
-    protected async fetch(method: RequestMethod, route: string, config?: RequestConfig) {
+    protected async fetch(method: RequestMethod, route: string, config?: HttpRequestOptions) {
         const authenticate = config?.authenticate ?? true;
         const controller = config?.controller ?? new AbortController();
         const data = config?.data ?? null;
