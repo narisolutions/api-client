@@ -1,4 +1,5 @@
 import { Auth } from "firebase/auth";
+import { LanguageCode } from "./i18n";
 
 type ApiConfig = {
     /**
@@ -6,6 +7,11 @@ type ApiConfig = {
      * @example "https://api.fake.com/v1"
      */
     baseURL: string;
+    /**
+     * Optional language code used to localize internal error messages.
+     * Defaults to "en" (English) if not provided.
+     */
+    language?: LanguageCode;
     /**
      * Authentication method for requests. Currently supports only Bearer authentication method.
      * @default "Bearer"

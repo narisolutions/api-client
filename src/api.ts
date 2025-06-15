@@ -1,11 +1,14 @@
 import { Auth } from "firebase/auth";
 import { ApiConfig, GetBodyInput, GetHeadersInput, RequestConfig, RequestMethod } from "./types";
 import pkg from "../package.json";
+import { LanguageCode, messages } from "./i18n";
 
 const DEFAULT_CLIENT_VERSION = `${pkg.name}/${pkg.version}`;
 
 class HttpClient {
     public baseURL: string | null = null;
+    public language: LanguageCode = "en";
+
     protected authType: "Bearer" = "Bearer";
     protected authInstance: Auth | null = null;
     protected timeoutMs = 20000;
@@ -22,6 +25,7 @@ class HttpClient {
         if (config.authType) this.authType = config.authType;
         if (config.authInstance) this.authInstance = config.authInstance;
         if (config.headers) this.headers = config.headers;
+        if (config.language) this.language = config.language;
     }
 
     async get<T>(route: string, config?: Omit<RequestConfig, "data">) {
@@ -72,11 +76,12 @@ class HttpClient {
         const timeoutMs = config?.timeoutMs ?? this.timeoutMs;
 
         if ((method === "GET" || method === "DELETE") && data !== null) {
-            throw new Error(`Invalid method call. Can't pass data to ${method} request.`);
+            throw new Error(messages[this.language].INVALID_GET_DATA(method));
         }
 
         const id = setTimeout(() => {
-            this.onTimeout?.(route), controller.abort();
+            this.onTimeout?.(route);
+            controller.abort();
         }, timeoutMs);
         const headers = await this.getHeaders({ data, customHeaders, authenticate });
 
@@ -214,7 +219,7 @@ class HttpClient {
 
         if (!token) {
             await this.authInstance?.signOut();
-            throw new Error("Your session either has expired or is invalid. Please login again.");
+            throw new Error(messages[this.language].SESSION_EXPIRED);
         }
 
         return token;
@@ -226,22 +231,18 @@ class HttpClient {
 
     private validateBaseURL(baseURL: string) {
         if (!baseURL) {
-            throw new Error("Missing baseURL: You must provide a valid API base URL.");
+            throw new Error(messages[this.language].MISSING_BASE_URL);
         }
 
         let url: URL;
         try {
             url = new URL(baseURL);
         } catch {
-            throw new Error(
-                `Invalid baseURL: "${baseURL}". It must be a well-formed absolute URL starting with "http://" or "https://".`,
-            );
+            throw new Error(messages[this.language].INVALID_BASE_URL(baseURL));
         }
 
         if (!["http:", "https:"].includes(url.protocol)) {
-            throw new Error(
-                `Invalid baseURL protocol: "${baseURL}". Only HTTP(S) URLs are supported (e.g. "https://api.example.com" or "http://localhost:3000").`,
-            );
+            throw new Error(messages[this.language].INVALID_PROTOCOL(baseURL));
         }
     }
 }
