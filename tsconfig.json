@@ -21,7 +21,10 @@
         "noUncheckedSideEffectImports": true,
 
         "resolveJsonModule": true,
-        "esModuleInterop": true
+        "esModuleInterop": true,
+        "declaration": true,
+        "emitDeclarationOnly": true,
+        "outDir": "./dist"
     },
     "include": ["src"]
 }
