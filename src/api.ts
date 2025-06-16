@@ -6,10 +6,10 @@ import {
     HttpRequestOptions,
     RequestMethod,
 } from "./types";
-import pkg from "../package.json";
 import { LanguageCode, messages } from "./i18n";
+import constant from "./constant";
 
-const DEFAULT_CLIENT_VERSION = `${pkg.name}/${pkg.version}`;
+const { DEFAULT_CLIENT_VERSION, SUPPORTED_FILE_TYPES, SUPPORTED_MEDIA_TYPES } = constant;
 
 class HttpClient {
     public baseURL: string | null = null;
@@ -150,28 +150,15 @@ class HttpClient {
         const contentType = response.headers.get("content-type");
 
         const isJson = contentType?.startsWith("application/json");
+        const isFile = SUPPORTED_FILE_TYPES.some(type => contentType?.startsWith(type));
+        const isMedia = SUPPORTED_MEDIA_TYPES.some(type => contentType?.startsWith(type));
 
-        if (isJson) {
-            return await response.json();
-        }
+        if (isJson) return await response.json();
 
-        const isFile =
-            contentType?.startsWith("application/pdf") ||
-            contentType?.startsWith("application/zip") ||
-            contentType?.startsWith("application/x-zip-compressed") ||
-            contentType?.startsWith("application/msword") ||
-            contentType?.startsWith("application/vnd.ms-excel");
-
-        const isMedia =
-            contentType?.startsWith("audio/") ||
-            contentType?.startsWith("video/") ||
-            contentType?.startsWith("image/") ||
-            contentType?.startsWith("font/");
-
-        // TODO: Handling media files needs improvements
         if (isFile || isMedia) {
             const blob = await response.blob();
-            const filename = response.headers.get("Content-Disposition");
+            const disposition = response.headers.get("Content-Disposition");
+            const filename = disposition?.match(/filename=\"?([^\";]+)\"?/)?.[1];
 
             return { blob, ...(filename && { filename }) };
         }
