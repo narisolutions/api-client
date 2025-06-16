@@ -31,12 +31,12 @@ jobs:
             - name: Install dependencies
               run: yarn install --frozen-lockfile
 
-            - name: 🛂 Verify tag matches version
+            - name: Verify tag matches version
               run: |
                   TAG_VERSION="${GITHUB_REF#refs/tags/release-}"
                   PKG_VERSION=$(jq -r .version package.json)
                   if [ "$TAG_VERSION" != "$PKG_VERSION" ]; then
-                    echo "❌ Tag version ($TAG_VERSION) does not match package.json version ($PKG_VERSION)"
+                    echo "❌ Tag version $TAG_VERSION does not match package.json version $PKG_VERSION"
                     exit 1
                   fi
                   echo "✅ Version verified: $PKG_VERSION"
