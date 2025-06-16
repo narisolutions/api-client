@@ -1,0 +1,59 @@
+name: Release
+
+on:
+    push:
+        tags:
+            - "release-*"
+        branches:
+            - master
+
+jobs:
+    release:
+        name: Release Package
+        runs-on: ubuntu-latest
+
+        permissions:
+            contents: write # required for changelog generation
+            packages: write
+            issues: write
+            pull-requests: write
+
+        steps:
+            - name: ⬇️ Checkout code
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0 # required for semantic-release
+
+            - name: 🟢 Use Node.js v22
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 22
+                  cache: yarn
+
+            - name: 📦 Install dependencies
+              run: yarn install --frozen-lockfile
+
+            - name: 🛂 Verify tag matches version
+              run: |
+                  TAG_VERSION="${GITHUB_REF#refs/tags/release-}"
+                  PKG_VERSION=$(jq -r .version package.json)
+                  if [ "$TAG_VERSION" != "$PKG_VERSION" ]; then
+                    echo "❌ Tag version ($TAG_VERSION) does not match package.json version ($PKG_VERSION)"
+                    exit 1
+                  fi
+                  echo "✅ Version verified: $PKG_VERSION"
+
+            - name: 🔨 Build package
+              run: yarn build
+
+            - name: 🚀 Publish to npm
+              env:
+                  YARN_NPM_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+              run: yarn npm publish --access public
+
+            - name: 📝 Generate changelog and GitHub release
+              uses: cycjimmy/semantic-release-action@v4
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              with:
+                  semantic_version: 19 # Pin latest semantic-release major version
