@@ -116,29 +116,70 @@ class HttpClient {
             token = await this.getToken();
         }
 
-        if (data instanceof FormData) {
-            return {
-                ...customHeaders,
-                ...(token && { Authorization: `Bearer ${token}` }),
-            };
+        const canonicalizeHeaderKey = (key: string) =>
+            key
+                .toLowerCase()
+                .split("-")
+                .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+                .join("-");
+
+        const normalizedHeaders: Record<string, string> = {};
+        const seenHeaderKeys = new Map<string, string[]>();
+
+        for (const [key, value] of Object.entries(customHeaders ?? {})) {
+            const lowerKey = key.toLowerCase();
+
+            if (!seenHeaderKeys.has(lowerKey)) {
+                seenHeaderKeys.set(lowerKey, []);
+            }
+            seenHeaderKeys.get(lowerKey)!.push(key);
+
+            normalizedHeaders[canonicalizeHeaderKey(key)] = value;
         }
 
-        return {
-            Accept: "application/json",
-            "Content-Type": "application/json",
-            ...customHeaders,
+        // Warn if duplicate keys (case-insensitive)
+        for (const [lowerKey, variants] of seenHeaderKeys) {
+            if (variants.length > 1) {
+                console.warn(
+                    `[HttpClient] Duplicate header ${lowerKey} detected with different casing: ${variants.join(
+                        ", ",
+                    )}. Only the last one will be used.`,
+                );
+            }
+        }
+
+        const hasCustomContentType = "Content-Type" in normalizedHeaders;
+
+        const headers: Record<string, string> = {
+            ...normalizedHeaders,
             ...(token && { Authorization: `Bearer ${token}` }),
-            "X-Client-Version": customHeaders?.["X-Client-Version"] ?? DEFAULT_CLIENT_VERSION,
+            "X-Client-Version": normalizedHeaders?.["X-Client-Version"] ?? DEFAULT_CLIENT_VERSION,
         };
+
+        if (!hasCustomContentType) {
+            if (data instanceof URLSearchParams) {
+                headers["Content-Type"] = "application/x-www-form-urlencoded";
+            } else if (
+                !(data instanceof FormData) &&
+                !(data instanceof Blob) &&
+                !(data instanceof ArrayBuffer) &&
+                !(data instanceof ReadableStream)
+            ) {
+                headers["Content-Type"] = "application/json";
+            }
+        }
+
+        return headers;
     }
 
     protected getBody(input: GetBodyInput) {
         const { data } = input;
 
-        if (!data) return null;
-
+        if (data === null || data === undefined) return null;
         if (data instanceof FormData) return data;
-
+        if (data instanceof URLSearchParams) return data;
+        if (data instanceof Blob || data instanceof ArrayBuffer || data instanceof ReadableStream)
+            return data;
         return JSON.stringify(data);
     }
 
