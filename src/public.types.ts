@@ -68,16 +68,4 @@ type HttpRequestOptions = {
     timeoutMs?: number;
 };
 
-type GetHeadersInput = {
-    data?: unknown;
-    customHeaders?: Record<string, string>;
-    authenticate?: boolean;
-};
-type GetBodyInput = {
-    data?: unknown;
-    authenticate?: boolean;
-};
-
-type RequestMethod = "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
-
-export type { HttpClientOptions, HttpRequestOptions, RequestMethod, GetHeadersInput, GetBodyInput };
+export type { HttpClientOptions, HttpRequestOptions };

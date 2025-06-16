@@ -1,11 +1,6 @@
 import { Auth } from "firebase/auth";
-import {
-    HttpClientOptions,
-    GetBodyInput,
-    GetHeadersInput,
-    HttpRequestOptions,
-    RequestMethod,
-} from "./types";
+import type { HttpClientOptions, HttpRequestOptions } from "./public.types";
+import type { GetBodyInput, GetHeadersInput, RequestMethod } from "./private.types";
 import { LanguageCode, messages } from "./i18n";
 import constant from "./constant";
 
