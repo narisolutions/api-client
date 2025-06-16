@@ -17,18 +17,18 @@ jobs:
             pull-requests: write
 
         steps:
-            - name: ⬇️ Checkout code
+            - name: Checkout code
               uses: actions/checkout@v4
               with:
                   fetch-depth: 0
 
-            - name: 🟢 Use Node.js v22
+            - name: Use Node.js v22
               uses: actions/setup-node@v4
               with:
                   node-version: 22
                   cache: yarn
 
-            - name: 📦 Install dependencies
+            - name: Install dependencies
               run: yarn install --frozen-lockfile
 
             - name: 🛂 Verify tag matches version
@@ -41,7 +41,7 @@ jobs:
                   fi
                   echo "✅ Version verified: $PKG_VERSION"
 
-            - name: 🔨 Build package
+            - name: Build package
               run: yarn build
 
             - name: Configure npm auth
@@ -49,14 +49,18 @@ jobs:
               env:
                   NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-            - name: 🚀 Publish to npm
+            - name: Publish to npm
               run: npm publish --access public
+
+            - name: Extract release version and format title
+              id: release_tag
+              run: echo "RELEASE_NAME=🚀 Release ${GITHUB_REF#refs/tags/release-}" >> $GITHUB_ENV
 
             - name: Generate GitHub release notes
               uses: softprops/action-gh-release@v1
               with:
                   tag_name: ${{ github.ref_name }}
-                  name: Release ${{ github.ref_name }}
+                  name: ${{ env.RELEASE_NAME }}
                   generate_release_notes: true
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
