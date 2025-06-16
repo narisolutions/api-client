@@ -1,2 +1,2 @@
 export { default as HttpClient } from "./api";
-export * from "./types";
+export * from "./public.types";
