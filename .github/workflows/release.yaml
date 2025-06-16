@@ -4,16 +4,14 @@ on:
     push:
         tags:
             - "release-*"
-        branches:
-            - master
 
 jobs:
     release:
-        name: Release Package
+        name: Release package
         runs-on: ubuntu-latest
 
         permissions:
-            contents: write # required for changelog generation
+            contents: write
             packages: write
             issues: write
             pull-requests: write
@@ -22,7 +20,7 @@ jobs:
             - name: ⬇️ Checkout code
               uses: actions/checkout@v4
               with:
-                  fetch-depth: 0 # required for semantic-release
+                  fetch-depth: 0
 
             - name: 🟢 Use Node.js v22
               uses: actions/setup-node@v4
@@ -46,14 +44,17 @@ jobs:
             - name: 🔨 Build package
               run: yarn build
 
-            - name: 🚀 Publish to npm
+            - name: Configure npm auth
+              run: echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
               env:
-                  YARN_NPM_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-              run: yarn npm publish --access public
+                  NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+            - name: 🚀 Publish to npm
+              run: npm publish --access public
 
             - name: 📝 Generate changelog and GitHub release
               uses: cycjimmy/semantic-release-action@v4
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               with:
-                  semantic_version: 19 # Pin latest semantic-release major version
+                  semantic_version: 19
