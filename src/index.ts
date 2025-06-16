@@ -1,1 +1,2 @@
-export { default as RequestHandler } from "./api";
+export { default as HttpClient } from "./api";
+export * from "./types";

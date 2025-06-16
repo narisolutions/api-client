@@ -1,22 +1,42 @@
 import { Auth } from "firebase/auth";
-import { ApiConfig, GetBodyInput, GetHeadersInput, RequestConfig, RequestMethod } from "./types";
+import {
+    HttpClientOptions,
+    GetBodyInput,
+    GetHeadersInput,
+    HttpRequestOptions,
+    RequestMethod,
+} from "./types";
+import { LanguageCode, messages } from "./i18n";
+import constant from "./constant";
 
-class RequestHandler {
+const { DEFAULT_CLIENT_VERSION, SUPPORTED_FILE_TYPES, SUPPORTED_MEDIA_TYPES } = constant;
+
+class HttpClient {
     public baseURL: string | null = null;
+    public language: LanguageCode = "en";
+
     protected authType: "Bearer" = "Bearer";
     protected authInstance: Auth | null = null;
+    protected onAuthFailure?: () => void;
     protected timeoutMs = 20000;
+    protected onTimeout?: (route: string) => void;
     protected headers: Record<string, string> = {};
 
-    constructor(config: ApiConfig) {
+    constructor(config: HttpClientOptions) {
+        this.validateBaseURL(config.baseURL);
+
         this.baseURL = config.baseURL;
+
         if (config.timeoutMs) this.timeoutMs = config.timeoutMs;
+        if (config.onTimeout) this.onTimeout = config.onTimeout;
         if (config.authType) this.authType = config.authType;
         if (config.authInstance) this.authInstance = config.authInstance;
+        if (config.onAuthFailure) this.onAuthFailure = config.onAuthFailure;
         if (config.headers) this.headers = config.headers;
+        if (config.language) this.language = config.language;
     }
 
-    async get<T>(route: string, config?: Omit<RequestConfig, "data">) {
+    async get<T>(route: string, config?: Omit<HttpRequestOptions, "data">) {
         const response = await this.fetch("GET", route, config);
 
         if (!response.ok) await this.handleError(response);
@@ -24,7 +44,7 @@ class RequestHandler {
         return result;
     }
 
-    async post<T>(route: string, config?: RequestConfig) {
+    async post<T>(route: string, config?: HttpRequestOptions) {
         const response = await this.fetch("POST", route, config);
 
         if (!response.ok) await this.handleError(response);
@@ -32,7 +52,7 @@ class RequestHandler {
         return result;
     }
 
-    async put<T>(route: string, config?: RequestConfig) {
+    async put<T>(route: string, config?: HttpRequestOptions) {
         const response = await this.fetch("PUT", route, config);
 
         if (!response.ok) await this.handleError(response);
@@ -40,7 +60,7 @@ class RequestHandler {
         return result;
     }
 
-    async patch<T>(route: string, config?: RequestConfig) {
+    async patch<T>(route: string, config?: HttpRequestOptions) {
         const response = await this.fetch("PATCH", route, config);
 
         if (!response.ok) await this.handleError(response);
@@ -48,7 +68,7 @@ class RequestHandler {
         return result;
     }
 
-    async delete<T>(route: string, config?: Omit<RequestConfig, "data">) {
+    async delete<T>(route: string, config?: Omit<HttpRequestOptions, "data">) {
         const response = await this.fetch("DELETE", route, config);
 
         if (!response.ok) await this.handleError(response);
@@ -56,7 +76,7 @@ class RequestHandler {
         return result;
     }
 
-    protected async fetch(method: RequestMethod, route: string, config?: RequestConfig) {
+    protected async fetch(method: RequestMethod, route: string, config?: HttpRequestOptions) {
         const authenticate = config?.authenticate ?? true;
         const controller = config?.controller ?? new AbortController();
         const data = config?.data ?? null;
@@ -64,10 +84,13 @@ class RequestHandler {
         const timeoutMs = config?.timeoutMs ?? this.timeoutMs;
 
         if ((method === "GET" || method === "DELETE") && data !== null) {
-            throw new Error(`Invalid method call. Can't pass data to ${method} request.`);
+            throw new Error(messages[this.language].INVALID_GET_DATA(method));
         }
 
-        const id = setTimeout(() => controller.abort(), timeoutMs);
+        const id = setTimeout(() => {
+            this.onTimeout?.(route);
+            controller.abort();
+        }, timeoutMs);
         const headers = await this.getHeaders({ data, customHeaders, authenticate });
 
         const response = await fetch(this.baseURL + route, {
@@ -93,28 +116,70 @@ class RequestHandler {
             token = await this.getToken();
         }
 
-        if (data instanceof FormData) {
-            return {
-                ...customHeaders,
-                ...(token && { Authorization: `Bearer ${token}` }),
-            };
+        const canonicalizeHeaderKey = (key: string) =>
+            key
+                .toLowerCase()
+                .split("-")
+                .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+                .join("-");
+
+        const normalizedHeaders: Record<string, string> = {};
+        const seenHeaderKeys = new Map<string, string[]>();
+
+        for (const [key, value] of Object.entries(customHeaders ?? {})) {
+            const lowerKey = key.toLowerCase();
+
+            if (!seenHeaderKeys.has(lowerKey)) {
+                seenHeaderKeys.set(lowerKey, []);
+            }
+            seenHeaderKeys.get(lowerKey)!.push(key);
+
+            normalizedHeaders[canonicalizeHeaderKey(key)] = value;
         }
 
-        return {
-            Accept: "application/json",
-            "Content-Type": "application/json",
-            ...customHeaders,
+        // Warn if duplicate keys (case-insensitive)
+        for (const [lowerKey, variants] of seenHeaderKeys) {
+            if (variants.length > 1) {
+                console.warn(
+                    `[HttpClient] Duplicate header ${lowerKey} detected with different casing: ${variants.join(
+                        ", ",
+                    )}. Only the last one will be used.`,
+                );
+            }
+        }
+
+        const hasCustomContentType = "Content-Type" in normalizedHeaders;
+
+        const headers: Record<string, string> = {
+            ...normalizedHeaders,
             ...(token && { Authorization: `Bearer ${token}` }),
+            "X-Client-Version": normalizedHeaders?.["X-Client-Version"] ?? DEFAULT_CLIENT_VERSION,
         };
+
+        if (!hasCustomContentType) {
+            if (data instanceof URLSearchParams) {
+                headers["Content-Type"] = "application/x-www-form-urlencoded";
+            } else if (
+                !(data instanceof FormData) &&
+                !(data instanceof Blob) &&
+                !(data instanceof ArrayBuffer) &&
+                !(data instanceof ReadableStream)
+            ) {
+                headers["Content-Type"] = "application/json";
+            }
+        }
+
+        return headers;
     }
 
     protected getBody(input: GetBodyInput) {
         const { data } = input;
 
-        if (!data) return null;
-
+        if (data === null || data === undefined) return null;
         if (data instanceof FormData) return data;
-
+        if (data instanceof URLSearchParams) return data;
+        if (data instanceof Blob || data instanceof ArrayBuffer || data instanceof ReadableStream)
+            return data;
         return JSON.stringify(data);
     }
 
@@ -126,28 +191,15 @@ class RequestHandler {
         const contentType = response.headers.get("content-type");
 
         const isJson = contentType?.startsWith("application/json");
+        const isFile = SUPPORTED_FILE_TYPES.some(type => contentType?.startsWith(type));
+        const isMedia = SUPPORTED_MEDIA_TYPES.some(type => contentType?.startsWith(type));
 
-        if (isJson) {
-            return await response.json();
-        }
+        if (isJson) return await response.json();
 
-        const isFile =
-            contentType?.startsWith("application/pdf") ||
-            contentType?.startsWith("application/zip") ||
-            contentType?.startsWith("application/x-zip-compressed") ||
-            contentType?.startsWith("application/msword") ||
-            contentType?.startsWith("application/vnd.ms-excel");
-
-        const isMedia =
-            contentType?.startsWith("audio/") ||
-            contentType?.startsWith("video/") ||
-            contentType?.startsWith("image/") ||
-            contentType?.startsWith("font/");
-
-        // TODO: Handling media files needs improvements
         if (isFile || isMedia) {
             const blob = await response.blob();
-            const filename = response.headers.get("Content-Disposition");
+            const disposition = response.headers.get("Content-Disposition");
+            const filename = disposition?.match(/filename=\"?([^\";]+)\"?/)?.[1];
 
             return { blob, ...(filename && { filename }) };
         }
@@ -168,42 +220,43 @@ class RequestHandler {
     }
 
     private async getToken(refresh?: boolean) {
+        const maxRetries = 3;
         let retries = 0;
         let token = "";
-        let isInit = false;
 
-        const get = async (refresh?: boolean) => {
+        while (retries < maxRetries) {
             try {
-                if (retries === 3) return;
-
                 const currentUser = this.authInstance?.currentUser;
 
                 if (!currentUser) {
-                    retries++;
-                    const waitMs = !isInit ? 3000 : retries * 1000;
-                    if (!isInit) isInit = true;
-
+                    const waitMs = retries === 0 ? 3000 : retries * 1000;
                     await this.sleep(waitMs);
-                    await get(refresh);
-                } else {
-                    token = await currentUser.getIdToken(refresh);
-                }
-            } catch (e) {
-                if (retries === 3) {
-                    console.error(e);
-                } else {
                     retries++;
-                    await this.sleep();
-                    await get();
+                    continue;
                 }
-            }
-        };
 
-        await get(refresh);
+                token = await currentUser.getIdToken(refresh);
+                break;
+            } catch (err) {
+                retries++;
+                if (retries >= maxRetries) {
+                    console.error(err);
+                    break;
+                }
+                await this.sleep(retries * 1000);
+            }
+        }
 
         if (!token) {
-            await this.authInstance?.signOut();
-            throw new Error("Your session either has expired or is invalid. Please login again.");
+            try {
+                await this.authInstance?.signOut();
+            } catch (err) {
+                console.error("[HttpClient] Failed to sign out after token error:", err);
+            }
+
+            this.onAuthFailure?.();
+
+            throw new Error(messages[this.language].SESSION_EXPIRED);
         }
 
         return token;
@@ -212,6 +265,23 @@ class RequestHandler {
     private async sleep(ms: number = 1000) {
         await new Promise(resolve => setTimeout(resolve, ms));
     }
+
+    private validateBaseURL(baseURL: string) {
+        if (!baseURL) {
+            throw new Error(messages[this.language].MISSING_BASE_URL);
+        }
+
+        let url: URL;
+        try {
+            url = new URL(baseURL);
+        } catch {
+            throw new Error(messages[this.language].INVALID_BASE_URL(baseURL));
+        }
+
+        if (!["http:", "https:"].includes(url.protocol)) {
+            throw new Error(messages[this.language].INVALID_PROTOCOL(baseURL));
+        }
+    }
 }
 
-export default RequestHandler;
+export default HttpClient;

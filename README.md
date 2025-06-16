@@ -11,9 +11,9 @@ Please note, it's planned to make this library more sophisticated in time.
 ## Usage
 
 ```javascript
-import { RequestHandler } from "@narisolutions/request";
+import { HttpClient } from "@narisolutions/api-client";
 
-const api = new RequestHandler( { baseURL: "https://api.example.com/v1", ... } );
+const api = new HttpClient( { baseURL: "https://api.example.com/v1", ... } );
 
 const getUsers = () => {
     try {
@@ -29,9 +29,9 @@ const getUsers = () => {
 #### TypeScript
 
 ```typescript
-import { RequestHandler } from "@narisolutions/request";
+import { HttpClient } from "@narisolutions/api-client";
 
-const api = new RequestHandler( { baseURL: "https://api.example.com/v1", ... } );
+const api = new HttpClient( { baseURL: "https://api.example.com/v1", ... } );
 
 type User = {
     name: string;

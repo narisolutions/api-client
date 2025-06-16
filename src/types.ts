@@ -1,11 +1,17 @@
 import { Auth } from "firebase/auth";
+import { LanguageCode } from "./i18n";
 
-type ApiConfig = {
+type HttpClientOptions = {
     /**
      * Base URL to be used for api requests.
      * @example "https://api.fake.com/v1"
      */
     baseURL: string;
+    /**
+     * Optional language code used to localize internal error messages.
+     * Defaults to "en" (English) if not provided.
+     */
+    language?: LanguageCode;
     /**
      * Authentication method for requests. Currently supports only Bearer authentication method.
      * @default "Bearer"
@@ -16,17 +22,29 @@ type ApiConfig = {
      */
     authInstance?: Auth;
     /**
+     * Optional callback when token acquisition fails after retries.
+     * This runs after the client auto signs the user out and throws.
+     */
+    onAuthFailure?: () => void;
+    /**
      * Request timeout in milliseconds.
      * @default 20000
      */
     timeoutMs?: number;
+    /**
+     * Optional callback that is triggered when a request exceeds the configured timeout.
+     * Useful for logging, showing user notifications, or tracking timeouts in monitoring tools.
+     *
+     * @param route - The route (relative path) that timed out
+     */
+    onTimeout?: (route: string) => void;
     /**
      * Custom headers to send for each request. This takes priority over default headers.
      */
     headers?: Record<string, string>;
 };
 
-type RequestConfig = {
+type HttpRequestOptions = {
     /**
      * Body of the request
      */
@@ -62,4 +80,4 @@ type GetBodyInput = {
 
 type RequestMethod = "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
 
-export type { ApiConfig, RequestConfig, RequestMethod, GetHeadersInput, GetBodyInput };
+export type { HttpClientOptions, HttpRequestOptions, RequestMethod, GetHeadersInput, GetBodyInput };
