@@ -193,8 +193,8 @@ class HttpClient {
 
         if (isFile || isMedia) {
             const blob = await response.blob();
-            const disposition = response.headers.get("Content-Disposition");
-            const filename = disposition?.match(/filename=\"?([^\";]+)\"?/)?.[1];
+            const contentDisposition = response.headers.get("Content-Disposition");
+            const filename = this.extractFilename(contentDisposition);
 
             return { blob, ...(filename && { filename }) };
         }
@@ -275,6 +275,33 @@ class HttpClient {
 
         if (!["http:", "https:"].includes(url.protocol)) {
             throw new Error(messages[this.language].INVALID_PROTOCOL(baseURL));
+        }
+    }
+
+    protected extractFilename(contentDisposition: string | null) {
+        if (!contentDisposition) return;
+
+        try {
+            const encoded = contentDisposition.match(/filename\*\s*=\s*[^']*'[^']*'([^;\n]+)/i);
+            if (encoded?.[1]) {
+                return decodeURIComponent(encoded[1]);
+            }
+
+            const regular = contentDisposition.match(/filename\s*=\s*"?([^\";\n]+)"?/i);
+            if (regular?.[1]) {
+                return regular[1];
+            }
+
+            if (/filename/i.test(contentDisposition)) {
+                console.warn(
+                    `[HttpClient] Unrecognized Content-Disposition format: "${contentDisposition}". Unable to extract filename.`,
+                );
+            }
+        } catch (error) {
+            console.warn(
+                `[HttpClient] Failed to decode filename from Content-Disposition header: "${contentDisposition}". Error:`,
+                error,
+            );
         }
     }
 }
