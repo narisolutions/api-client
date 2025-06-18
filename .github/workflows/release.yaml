@@ -41,6 +41,9 @@ jobs:
                   fi
                   echo "✅ Version verified: $PKG_VERSION"
 
+            - name: Run tests
+              run: yarn vitest --run
+
             - name: Build package
               run: yarn build
 
