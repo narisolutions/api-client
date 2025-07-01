@@ -128,7 +128,6 @@ class HttpClient {
                 seenHeaderKeys.set(lowerKey, []);
             }
             seenHeaderKeys.get(lowerKey)!.push(key);
-
             normalizedHeaders[canonicalizeHeaderKey(key)] = value;
         }
 
