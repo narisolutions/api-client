@@ -1,7 +1,7 @@
 import pkg from "../package.json";
 
 export default {
-    DEFAULT_CLIENT_VERSION: `${pkg.name}/${pkg.version}`,
+    DEFAULT_CLIENT_VERSION: pkg.version,
     SUPPORTED_FILE_TYPES: [
         // 📄 Documents
         "application/pdf",
