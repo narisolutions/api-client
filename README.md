@@ -9,8 +9,6 @@ This library is **fresh** and still under active development.
 -   Smaller bundle size, focused on covering the most common API request scenarios
 -   Will become more sophisticated over time
 
----
-
 ## Installation
 
 Using npm
@@ -24,8 +22,6 @@ Using yarn
 ```bash
 yarn add @narisolutions/api-client
 ```
-
----
 
 ## JavaScript
 
@@ -43,8 +39,6 @@ const getUsers = async () => {
     }
 };
 ```
-
----
 
 ## TypeScript
 
@@ -67,8 +61,6 @@ const getUsers = async () => {
     }
 };
 ```
-
----
 
 ## `HttpClient` Options
 
