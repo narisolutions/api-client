@@ -202,15 +202,19 @@ class HttpClient {
     }
 
     protected async handleError(response: Response) {
-        let error;
+        let msg;
 
         if (response.headers.get("content-type")?.startsWith("application/json")) {
-            error = await response.json();
+            msg = await response.json();
         } else {
-            error = await response.text();
+            msg = await response.text();
         }
 
-        throw Error(error);
+        if (typeof msg === "string") {
+            throw Error(msg);
+        } else {
+            throw new Error(JSON.stringify(msg));
+        }
     }
 
     private async getToken(refresh?: boolean) {
