@@ -8,6 +8,7 @@ export const messages = {
         SESSION_EXPIRED: "Your session either has expired or is invalid. Please login again.",
         INVALID_GET_DATA: (method: string) =>
             `Invalid method call. Can't pass data to ${method} request.`,
+        REQUEST_FAILED: (status: number) => `Request failed with status ${status}.`,
     },
     ka: {
         MISSING_BASE_URL: "baseURL არ არის მითითებული. გთხოვთ მიუთითოთ სწორი API მისამართი.",
@@ -18,6 +19,7 @@ export const messages = {
         SESSION_EXPIRED: "თქვენი სესია ამოიწურა ან არასწორია. გთხოვთ, ხელახლა შეხვიდეთ სისტემაში.",
         INVALID_GET_DATA: (method: string) =>
             `არასწორი მოთხოვნა. ${method} მეთოდს data ვერ გადაეცემა.`,
+        REQUEST_FAILED: (status: number) => `მოთხოვნა წარუმატებელია. სტატუსი ${status}.`,
     },
     sv: {
         MISSING_BASE_URL: "baseURL saknas: Du måste ange en giltig API-basadress.",
@@ -28,6 +30,7 @@ export const messages = {
         SESSION_EXPIRED: "Din session har gått ut eller är ogiltig. Vänligen logga in igen.",
         INVALID_GET_DATA: (method: string) =>
             `Felaktigt anrop. Du kan inte skicka data med en ${method}-förfrågan.`,
+        REQUEST_FAILED: (status: number) => `Förfrågan misslyckades med status ${status}.`,
     },
 } as const;
 
