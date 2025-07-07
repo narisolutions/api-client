@@ -219,7 +219,7 @@ class HttpClient {
             msg = await response.text();
         }
 
-        throw new Error(msg || `Request failed with status ${response.status}.`);
+        throw new Error(msg || messages[this.language].REQUEST_FAILED(response.status));
     }
 
     private async getToken(refresh?: boolean) {
