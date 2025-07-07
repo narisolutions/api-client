@@ -202,19 +202,24 @@ class HttpClient {
     }
 
     protected async handleError(response: Response) {
-        let msg;
+        let msg = "";
 
-        if (response.headers.get("content-type")?.startsWith("application/json")) {
-            msg = await response.json();
+        if (response.headers.get("content-type")?.includes("application/json")) {
+            const data = await response.json();
+
+            msg =
+                data.message ??
+                data.msg ??
+                data.error ??
+                data.detail ??
+                data.details ??
+                (Array.isArray(data.errors) ? data.errors.join(", ") : undefined) ??
+                (typeof data === "string" ? data : JSON.stringify(data));
         } else {
             msg = await response.text();
         }
 
-        if (typeof msg === "string") {
-            throw Error(msg);
-        } else {
-            throw new Error(JSON.stringify(msg));
-        }
+        throw new Error(msg || `Request failed with status ${response.status}.`);
     }
 
     private async getToken(refresh?: boolean) {
