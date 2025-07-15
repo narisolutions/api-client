@@ -3,6 +3,20 @@ import type { HttpClientOptions, HttpRequestOptions } from "./public.types";
 import type { GetBodyInput, GetHeadersInput, RequestMethod } from "./private.types";
 import { LanguageCode, messages } from "./i18n";
 import constant from "./constant";
+import { z } from "zod";
+
+const errorSchemas = {
+    pydantic: z.array(
+        z
+            .object({
+                loc: z.array(z.string()),
+                msg: z.string(),
+                type: z.string(),
+            })
+            .strict(),
+    ),
+    arrayOfStrings: z.array(z.string()),
+};
 
 const { DEFAULT_CLIENT_VERSION, SUPPORTED_FILE_TYPES, SUPPORTED_MEDIA_TYPES } = constant;
 
@@ -207,14 +221,24 @@ class HttpClient {
         if (response.headers.get("content-type")?.includes("application/json")) {
             const data = await response.json();
 
-            msg =
-                data.message ??
-                data.msg ??
-                data.error ??
-                data.detail ??
-                data.details ??
-                (Array.isArray(data.errors) ? data.errors.join(", ") : undefined) ??
-                (typeof data === "string" ? data : JSON.stringify(data));
+            if (data.message && typeof data.message === "string") msg = data.message;
+            else if (data.msg && typeof data.msg === "string") msg = data.msg;
+            else if (data.error && typeof data.error === "string") msg = data.error;
+            else if (data.detail && Array.isArray(data.detail)) {
+                try {
+                    const parsedError = errorSchemas.pydantic.parse(data.detail);
+                    msg = parsedError.map(i => i.msg).join(", ");
+                } catch (_) {
+                    //
+                }
+            } else if (data.errors && Array.isArray(data.errors)) {
+                try {
+                    const parsedError = errorSchemas.arrayOfStrings.parse(data.errors);
+                    msg = parsedError.join(", ");
+                } catch (_) {
+                    //
+                }
+            } else msg = JSON.stringify(data);
         } else {
             msg = await response.text();
         }
