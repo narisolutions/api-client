@@ -178,30 +178,45 @@ class HttpClient {
     }
 
     protected async handleSuccess(response: Response) {
+        // TODO: Flow of updating firebase token must be more flexible
         if (response.headers.get("update-token") === "true") {
             await this.getToken(true);
         }
 
+        const contentLength = response.headers.get("content-length");
         const contentType = response.headers.get("content-type");
+        const status = response.status;
 
         const isJson = contentType?.startsWith("application/json");
         const isFile = SUPPORTED_FILE_TYPES.some(type => contentType?.startsWith(type));
         const isMedia = SUPPORTED_MEDIA_TYPES.some(type => contentType?.startsWith(type));
 
-        if (isJson) return await response.json();
+        if (isJson) {
+            if (contentLength === "0" || status === 204) return null;
+
+            return await response.json();
+        }
 
         if (isFile || isMedia) {
             const blob = await response.blob();
+
+            if (blob.size === 0) return null;
+
             const contentDisposition = response.headers.get("Content-Disposition");
             const filename = this.extractFilename(contentDisposition);
 
             return { blob, ...(filename && { filename }) };
         }
 
-        return await response.text();
+        const text = await response.text();
+
+        if (!text) return null;
+
+        return text;
     }
 
     protected async handleError(response: Response) {
+        // TODO: Accomodate for commong backend error formatting structures
         let msg = "";
 
         if (response.headers.get("content-type")?.includes("application/json")) {
