@@ -17,18 +17,28 @@ class HttpClient {
     protected onTimeout?: (route: string) => void;
     protected headers: Record<string, string> = {};
 
-    constructor(config: HttpClientOptions) {
-        this.validateBaseURL(config.baseURL);
+    constructor(options: HttpClientOptions) {
+        this.setOptions(options);
+    }
 
-        this.baseURL = config.baseURL;
+    setOptions(options: HttpClientOptions) {
+        this.validateBaseURL(options.baseURL);
+        this.baseURL = options.baseURL;
 
-        if (config.timeoutMs) this.timeoutMs = config.timeoutMs;
-        if (config.onTimeout) this.onTimeout = config.onTimeout;
-        if (config.authType) this.authType = config.authType;
-        if (config.authInstance) this.authInstance = config.authInstance;
-        if (config.onAuthFailure) this.onAuthFailure = config.onAuthFailure;
-        if (config.headers) this.headers = config.headers;
-        if (config.language) this.language = config.language;
+        if (options.timeoutMs) this.timeoutMs = options.timeoutMs;
+        if (options.onTimeout) this.onTimeout = options.onTimeout;
+        if (options.authType) this.authType = options.authType;
+        if (options.authInstance) this.authInstance = options.authInstance;
+        if (options.onAuthFailure) this.onAuthFailure = options.onAuthFailure;
+
+        if (options.headers) {
+            this.headers = {
+                ...(this.headers ?? {}),
+                ...options.headers,
+            };
+        }
+
+        if (options.language) this.language = options.language;
     }
 
     async get<T>(route: string, config?: Omit<HttpRequestOptions, "data">) {
