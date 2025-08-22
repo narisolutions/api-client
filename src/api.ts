@@ -21,9 +21,11 @@ class HttpClient {
         this.setOptions(options);
     }
 
-    setOptions(options: HttpClientOptions) {
-        this.validateBaseURL(options.baseURL);
-        this.baseURL = options.baseURL;
+    setOptions(options: Partial<HttpClientOptions>) {
+        if (options.baseURL) {
+            this.validateBaseURL(options.baseURL);
+            this.baseURL = options.baseURL;
+        }
 
         if (options.timeoutMs) this.timeoutMs = options.timeoutMs;
         if (options.onTimeout) this.onTimeout = options.onTimeout;
