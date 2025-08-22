@@ -17,14 +17,16 @@ class HttpClient {
     protected onTimeout?: (route: string) => void;
     protected headers: Record<string, string> = {};
 
-    constructor({ baseURL, ...rest }: HttpClientOptions) {
-        this.validateBaseURL(baseURL);
-        this.baseURL = baseURL;
-
-        this.setOptions(rest);
+    constructor(options: HttpClientOptions) {
+        this.setOptions(options);
     }
 
-    setOptions(options: Partial<Omit<HttpClientOptions, "baseURL">>) {
+    setOptions(options: Partial<HttpClientOptions>) {
+        if ("baseURL" in options && typeof options.baseURL === "string") {
+            this.validateBaseURL(options.baseURL);
+            this.baseURL = options.baseURL;
+        }
+
         if (options.timeoutMs) this.timeoutMs = options.timeoutMs;
         if (options.onTimeout) this.onTimeout = options.onTimeout;
         if (options.authType) this.authType = options.authType;
