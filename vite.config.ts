@@ -10,19 +10,23 @@ export default defineConfig({
     },
     build: {
         lib: {
-            entry: path.resolve(__dirname, "src/index.ts"),
-            name: "api-client",
-            fileName: format => `index.${format}.js`,
+            // Multi-entry: each client has its own bundle so a consumer
+            // importing "@narisolutions/api-client/http" physically cannot
+            // pull code from a sibling client (e.g. graphql) into their build.
+            entry: {
+                index: path.resolve(__dirname, "src/index.ts"),
+                "http/index": path.resolve(__dirname, "src/http/index.ts"),
+                // Future clients slot in here, e.g.:
+                // "graphql/index": path.resolve(__dirname, "src/graphql/index.ts"),
+            },
             formats: ["es"],
+            fileName: (_format, entryName) => `${entryName}.es.js`,
         },
         sourcemap: false,
         emptyOutDir: true,
         rollupOptions: {
-            external: ["firebase"],
+            external: [/^firebase(\/|$)/],
             output: {
-                globals: {
-                    firebase: "firebase",
-                },
                 format: "es",
             },
         },
