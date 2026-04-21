@@ -1,13 +1,6 @@
-# ⚠️ Warning!
+# @narisolutions/api-client
 
-This library is **fresh** and still under active development.
-
-**Current status:**
-
--   Supports only **Firebase JWT authentication**
--   Designed as a lightweight, TypeScript-first alternative to [axios](https://www.npmjs.com/package/axios)
--   Smaller bundle size, focused on covering the most common API request scenarios
--   Will become more sophisticated over time (additional clients such as GraphQL are planned under separate subpaths)
+A lightweight, TypeScript-first HTTP client with Firebase JWT authentication. Designed as a smaller-footprint alternative to [axios](https://www.npmjs.com/package/axios), focused on the most common API request scenarios. Additional clients (e.g. GraphQL) are planned under separate subpath exports.
 
 ## Installation
 
