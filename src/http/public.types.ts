@@ -6,7 +6,7 @@ type HttpClientOptions = {
      * Base URL to be used for api requests.
      * @example "https://api.fake.com/v1"
      */
-    baseURL: string;
+    baseUrl: string;
     /**
      * Optional language code used to localize internal error messages.
      * Defaults to "en" (English) if not provided.
@@ -42,6 +42,12 @@ type HttpClientOptions = {
      * Custom headers to send for each request. This takes priority over default headers.
      */
     headers?: Record<string, string>;
+    /**
+     * Maximum allowed response size in bytes, checked against the Content-Length header
+     * before the body is parsed. Responses exceeding this threshold throw synchronously
+     * and the body is not read. Leave undefined to allow any size.
+     */
+    maxResponseBytes?: number;
 };
 
 type HttpRequestOptions = {
