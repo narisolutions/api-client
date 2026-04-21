@@ -1,4 +1,4 @@
-import pkg from "../package.json";
+import pkg from "../../package.json";
 
 export default {
     DEFAULT_CLIENT_VERSION: pkg.version,
