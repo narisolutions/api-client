@@ -17,7 +17,7 @@ describe("HttpClient: authentication", () => {
             signOut: vi.fn(),
         };
         const client = new HttpClient({
-            baseURL: "https://api.example.com",
+            baseUrl: "https://api.example.com",
             authInstance: authInstance as never,
         });
         mockFetch.mockResolvedValueOnce(jsonResponse({}));
@@ -35,7 +35,7 @@ describe("HttpClient: authentication", () => {
             signOut: vi.fn(),
         };
         const client = new HttpClient({
-            baseURL: "https://api.example.com",
+            baseUrl: "https://api.example.com",
             authInstance: authInstance as never,
         });
         mockFetch.mockResolvedValueOnce(jsonResponse({}));
@@ -51,7 +51,7 @@ describe("HttpClient: authentication", () => {
         const getIdToken = vi.fn().mockResolvedValue("fake-token");
         const authInstance = { currentUser: { getIdToken }, signOut: vi.fn() };
         const client = new HttpClient({
-            baseURL: "https://api.example.com",
+            baseUrl: "https://api.example.com",
             authInstance: authInstance as never,
         });
         mockFetch.mockResolvedValueOnce(
@@ -75,7 +75,7 @@ describe("HttpClient: authentication", () => {
         const onAuthFailure = vi.fn();
         const authInstance = { currentUser: null, signOut };
         const client = new HttpClient({
-            baseURL: "https://api.example.com",
+            baseUrl: "https://api.example.com",
             authInstance: authInstance as never,
             onAuthFailure,
         });
@@ -100,7 +100,7 @@ describe("HttpClient: authentication", () => {
         const authInstance = { currentUser: { getIdToken }, signOut };
         const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
         const client = new HttpClient({
-            baseURL: "https://api.example.com",
+            baseUrl: "https://api.example.com",
             authInstance: authInstance as never,
         });
         mockFetch.mockResolvedValue(jsonResponse({}));
@@ -126,7 +126,7 @@ describe("HttpClient: authentication", () => {
         };
         const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
         const client = new HttpClient({
-            baseURL: "https://api.example.com",
+            baseUrl: "https://api.example.com",
             authInstance: authInstance as never,
         });
         mockFetch.mockResolvedValue(jsonResponse({}));

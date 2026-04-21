@@ -6,7 +6,7 @@ describe("HttpClient: success response handling", () => {
     let client: HttpClient;
 
     beforeEach(() => {
-        client = new HttpClient({ baseURL: "https://api.example.com" });
+        client = new HttpClient({ baseUrl: "https://api.example.com" });
         mockFetch.mockReset();
     });
 
@@ -111,7 +111,7 @@ describe("HttpClient: filename extraction", () => {
         });
 
     beforeEach(() => {
-        client = new HttpClient({ baseURL: "https://api.example.com" });
+        client = new HttpClient({ baseUrl: "https://api.example.com" });
         mockFetch.mockReset();
     });
 
@@ -155,7 +155,7 @@ describe("HttpClient: error response handling", () => {
     let client: HttpClient;
 
     beforeEach(() => {
-        client = new HttpClient({ baseURL: "https://api.example.com" });
+        client = new HttpClient({ baseUrl: "https://api.example.com" });
         mockFetch.mockReset();
     });
 

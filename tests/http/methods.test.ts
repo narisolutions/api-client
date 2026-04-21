@@ -6,7 +6,7 @@ describe("HttpClient: HTTP methods", () => {
     let client: HttpClient;
 
     beforeEach(() => {
-        client = new HttpClient({ baseURL: "https://api.example.com" });
+        client = new HttpClient({ baseUrl: "https://api.example.com" });
         mockFetch.mockReset();
     });
 

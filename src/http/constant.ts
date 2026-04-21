@@ -2,6 +2,7 @@ import pkg from "../../package.json";
 
 export default {
     DEFAULT_CLIENT_VERSION: pkg.version,
+    MAX_ERROR_MESSAGE_LENGTH: 500,
     SUPPORTED_FILE_TYPES: [
         // 📄 Documents
         "application/pdf",
@@ -56,10 +57,12 @@ export default {
         "image/jpeg", // .jpg, .jpeg
         "image/gif", // .gif
         "image/webp", // .webp
-        "image/svg+xml", // .svg
         "image/avif", // .avif
         "image/bmp", // .bmp
         "image/tiff", // .tif, .tiff
+        // image/svg+xml intentionally excluded: SVG can execute scripts when
+        // rendered via createObjectURL/<object>; consumers must opt in by
+        // handling the Response themselves.
 
         // 🔤 Fonts
         "font/woff", // .woff

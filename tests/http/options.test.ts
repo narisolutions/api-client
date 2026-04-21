@@ -13,7 +13,7 @@ describe("HttpClient: setOptions", () => {
     });
 
     it("updates language after construction", async () => {
-        const client = new HttpClient({ baseURL: "https://api.example.com" });
+        const client = new HttpClient({ baseUrl: "https://api.example.com" });
         client.setOptions({ language: "ka" });
 
         await expect(
@@ -23,7 +23,7 @@ describe("HttpClient: setOptions", () => {
 
     it("merges headers on setOptions call, later calls override earlier", async () => {
         const client = new HttpClient({
-            baseURL: "https://api.example.com",
+            baseUrl: "https://api.example.com",
             headers: { "X-A": "1" },
         });
         client.setOptions({ headers: { "X-B": "2" } });
@@ -38,7 +38,7 @@ describe("HttpClient: setOptions", () => {
 
     it("updates onTimeout callback", async () => {
         vi.useFakeTimers();
-        const client = new HttpClient({ baseURL: "https://api.example.com", timeoutMs: 1000 });
+        const client = new HttpClient({ baseUrl: "https://api.example.com", timeoutMs: 1000 });
         const onTimeout = vi.fn();
         client.setOptions({ onTimeout });
         abortableFetch();
@@ -51,7 +51,7 @@ describe("HttpClient: setOptions", () => {
     });
 
     it("ignores timeoutMs: 0 (falsy guard)", async () => {
-        const client = new HttpClient({ baseURL: "https://api.example.com", timeoutMs: 5000 });
+        const client = new HttpClient({ baseUrl: "https://api.example.com", timeoutMs: 5000 });
         client.setOptions({ timeoutMs: 0 });
         await client.get("/x", { authenticate: false });
         expect(mockFetch).toHaveBeenCalled();
@@ -64,28 +64,28 @@ describe("HttpClient: i18n", () => {
     });
 
     it("returns Georgian INVALID_GET_DATA for ka language", async () => {
-        const client = new HttpClient({ baseURL: "https://api.example.com", language: "ka" });
+        const client = new HttpClient({ baseUrl: "https://api.example.com", language: "ka" });
         await expect(
             client.get("/x", { authenticate: false, data: {} } as never),
         ).rejects.toThrow(/ვერ გადაეცემა/);
     });
 
     it("returns Swedish INVALID_GET_DATA for sv language", async () => {
-        const client = new HttpClient({ baseURL: "https://api.example.com", language: "sv" });
+        const client = new HttpClient({ baseUrl: "https://api.example.com", language: "sv" });
         await expect(
             client.get("/x", { authenticate: false, data: {} } as never),
         ).rejects.toThrow(/skicka data med en GET/);
     });
 
     it("defaults to English INVALID_GET_DATA", async () => {
-        const client = new HttpClient({ baseURL: "https://api.example.com" });
+        const client = new HttpClient({ baseUrl: "https://api.example.com" });
         await expect(
             client.get("/x", { authenticate: false, data: {} } as never),
         ).rejects.toThrow(/Can't pass data to GET/);
     });
 
-    it("validateBaseURL always uses English (runs before language is set)", () => {
-        expect(() => new HttpClient({ baseURL: "", language: "ka" })).toThrow(/Missing baseURL/);
-        expect(() => new HttpClient({ baseURL: "", language: "sv" })).toThrow(/Missing baseURL/);
+    it("validateBaseUrl always uses English (runs before language is set)", () => {
+        expect(() => new HttpClient({ baseUrl: "", language: "ka" })).toThrow(/Missing baseUrl/);
+        expect(() => new HttpClient({ baseUrl: "", language: "sv" })).toThrow(/Missing baseUrl/);
     });
 });

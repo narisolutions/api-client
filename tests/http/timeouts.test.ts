@@ -12,7 +12,7 @@ describe("HttpClient: timeouts & abort", () => {
         vi.useFakeTimers();
         const onTimeout = vi.fn();
         const client = new HttpClient({
-            baseURL: "https://api.example.com",
+            baseUrl: "https://api.example.com",
             timeoutMs: 60000,
             onTimeout,
         });
@@ -27,7 +27,7 @@ describe("HttpClient: timeouts & abort", () => {
     });
 
     it("passes through a custom AbortController", async () => {
-        const client = new HttpClient({ baseURL: "https://api.example.com" });
+        const client = new HttpClient({ baseUrl: "https://api.example.com" });
         const controller = new AbortController();
         mockFetch.mockResolvedValueOnce(jsonResponse({}));
 
@@ -38,7 +38,7 @@ describe("HttpClient: timeouts & abort", () => {
     });
 
     it("external abort cancels fetch", async () => {
-        const client = new HttpClient({ baseURL: "https://api.example.com" });
+        const client = new HttpClient({ baseUrl: "https://api.example.com" });
         const controller = new AbortController();
         abortableFetch();
 
@@ -52,7 +52,7 @@ describe("HttpClient: timeouts & abort", () => {
         vi.useFakeTimers();
         const onTimeout = vi.fn();
         const client = new HttpClient({
-            baseURL: "https://api.example.com",
+            baseUrl: "https://api.example.com",
             timeoutMs: 5000,
             onTimeout,
         });

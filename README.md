@@ -28,7 +28,7 @@ yarn add @narisolutions/api-client
 ```js
 import { HttpClient } from "@narisolutions/api-client";
 
-const api = new HttpClient({ baseURL: "https://api.example.com/v1" });
+const api = new HttpClient({ baseUrl: "https://api.example.com/v1" });
 
 const getUsers = async () => {
     try {
@@ -45,7 +45,7 @@ const getUsers = async () => {
 ```ts
 import { HttpClient } from "@narisolutions/api-client";
 
-const api = new HttpClient({ baseURL: "https://api.example.com/v1" });
+const api = new HttpClient({ baseUrl: "https://api.example.com/v1" });
 
 type User = {
     name: string;
@@ -68,7 +68,7 @@ Below are the options you can pass when creating a new `HttpClient`:
 
 | Option          | Type                          | Required | Description                                                                                       |
 | --------------- | ----------------------------- | -------- | ------------------------------------------------------------------------------------------------- |
-| `baseURL`       | `string`                      | ✅       | Base URL for all API requests. Must be a valid absolute URL (e.g., `https://api.example.com`).    |
+| `baseUrl`       | `string`                      | ✅       | Base URL for all API requests. Must be a valid absolute URL (e.g., `https://api.example.com`).    |
 | `language`      | `"en"` \| `"sv"` \| `"ka"`    | ⏺        | Localizes internal error messages. Defaults to `"en"`.                                            |
 | `authType`      | `"Bearer"`                    | ⏺        | Authentication type. Currently only `"Bearer"` is supported.                                      |
 | `authInstance`  | `Auth` (from `firebase/auth`) | ⏺        | Firebase Auth instance for automatic JWT retrieval.                                               |

@@ -11,7 +11,7 @@ describe("HttpClient: headers", () => {
 
     it("merges default and per-request headers, request wins on conflict", async () => {
         const client = new HttpClient({
-            baseURL: "https://api.example.com",
+            baseUrl: "https://api.example.com",
             headers: { "X-A": "default-a", "X-B": "default-b" },
         });
 
@@ -27,7 +27,7 @@ describe("HttpClient: headers", () => {
     });
 
     it("canonicalizes header casing", async () => {
-        const client = new HttpClient({ baseURL: "https://api.example.com" });
+        const client = new HttpClient({ baseUrl: "https://api.example.com" });
 
         await client.get("/x", {
             authenticate: false,
@@ -40,7 +40,7 @@ describe("HttpClient: headers", () => {
 
     it("warns on duplicate headers with differing casing", async () => {
         const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
-        const client = new HttpClient({ baseURL: "https://api.example.com" });
+        const client = new HttpClient({ baseUrl: "https://api.example.com" });
 
         await client.get("/x", {
             authenticate: false,
@@ -54,14 +54,14 @@ describe("HttpClient: headers", () => {
     });
 
     it("sets X-Client-Version from package.json by default", async () => {
-        const client = new HttpClient({ baseURL: "https://api.example.com" });
+        const client = new HttpClient({ baseUrl: "https://api.example.com" });
         await client.get("/x", { authenticate: false });
         const [, init] = lastCall();
         expect(init.headers["X-Client-Version"]).toBe(pkg.version);
     });
 
     it("allows overriding X-Client-Version via headers", async () => {
-        const client = new HttpClient({ baseURL: "https://api.example.com" });
+        const client = new HttpClient({ baseUrl: "https://api.example.com" });
         await client.get("/x", {
             authenticate: false,
             headers: { "X-Client-Version": "consumer-1.0.0" },

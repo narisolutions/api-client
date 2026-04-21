@@ -4,10 +4,11 @@ import type { GetBodyInput, GetHeadersInput, RequestMethod } from "./private.typ
 import { LanguageCode, messages } from "./i18n";
 import constant from "./constant";
 
-const { DEFAULT_CLIENT_VERSION, SUPPORTED_FILE_TYPES, SUPPORTED_MEDIA_TYPES } = constant;
+const { DEFAULT_CLIENT_VERSION, MAX_ERROR_MESSAGE_LENGTH, SUPPORTED_FILE_TYPES, SUPPORTED_MEDIA_TYPES } = constant;
 
 class HttpClient {
-    protected readonly baseURL!: string;
+    protected readonly baseUrl!: string;
+    protected readonly baseOrigin!: string;
     protected language: LanguageCode = "en";
 
     protected authType: "Bearer" = "Bearer";
@@ -16,10 +17,12 @@ class HttpClient {
     protected timeoutMs = 20000;
     protected onTimeout?: (route: string) => void;
     protected headers: Record<string, string> = {};
+    protected maxResponseBytes?: number;
 
-    constructor({ baseURL, authInstance, authType, ...rest }: HttpClientOptions) {
-        this.validateBaseURL(baseURL);
-        this.baseURL = baseURL;
+    constructor({ baseUrl, authInstance, authType, ...rest }: HttpClientOptions) {
+        this.validateBaseUrl(baseUrl);
+        this.baseUrl = baseUrl;
+        this.baseOrigin = new URL(baseUrl).origin;
 
         if (authType) this.authType = authType;
         if (authInstance) this.authInstance = authInstance;
@@ -27,10 +30,11 @@ class HttpClient {
         this.setOptions(rest);
     }
 
-    setOptions(options: Partial<Omit<HttpClientOptions, "baseURL" | "authInstance" | "authType">>) {
+    setOptions(options: Partial<Omit<HttpClientOptions, "baseUrl" | "authInstance" | "authType">>) {
         if (options.timeoutMs) this.timeoutMs = options.timeoutMs;
         if (options.onTimeout) this.onTimeout = options.onTimeout;
         if (options.onAuthFailure) this.onAuthFailure = options.onAuthFailure;
+        if (options.maxResponseBytes !== undefined) this.maxResponseBytes = options.maxResponseBytes;
 
         if (options.headers) {
             this.headers = {
@@ -93,6 +97,8 @@ class HttpClient {
             throw new Error(messages[this.language].INVALID_GET_DATA(method));
         }
 
+        const url = this.resolveUrl(route);
+
         const id = setTimeout(() => {
             this.onTimeout?.(route);
             controller.abort();
@@ -100,11 +106,12 @@ class HttpClient {
         const headers = await this.getHeaders({ data, customHeaders, authenticate });
 
         try {
-            const response = await fetch(this.baseURL + route, {
+            const response = await fetch(url, {
                 headers,
                 method,
                 mode: "cors",
                 referrer: "no-referrer",
+                redirect: authenticate ? "error" : "follow",
                 signal: controller.signal,
                 ...(data && { body: this.getBody({ data }) }),
             });
@@ -113,6 +120,19 @@ class HttpClient {
         } finally {
             clearTimeout(id);
         }
+    }
+
+    protected resolveUrl(route: string): string {
+        let resolved: URL;
+        try {
+            resolved = new URL(this.baseUrl + route);
+        } catch {
+            throw new Error(messages[this.language].INVALID_ROUTE(route));
+        }
+        if (resolved.origin !== this.baseOrigin) {
+            throw new Error(messages[this.language].INVALID_ROUTE(route));
+        }
+        return resolved.toString();
     }
 
     protected async getHeaders(input: GetHeadersInput) {
@@ -196,6 +216,8 @@ class HttpClient {
             await this.getToken(true);
         }
 
+        this.assertResponseSize(response);
+
         const contentLength = response.headers.get("content-length");
         const contentType = response.headers.get("content-type");
         const status = response.status;
@@ -229,7 +251,7 @@ class HttpClient {
     }
 
     protected async handleError(response: Response) {
-        // TODO: Accomodate for commong backend error formatting structures
+        // TODO: Accommodate common backend error formatting structures
         let msg = "";
 
         if (response.headers.get("content-type")?.includes("application/json")) {
@@ -245,7 +267,23 @@ class HttpClient {
             msg = await response.text();
         }
 
+        if (msg.length > MAX_ERROR_MESSAGE_LENGTH) {
+            msg = msg.slice(0, MAX_ERROR_MESSAGE_LENGTH) + "… (truncated)";
+        }
+
         throw new Error(msg || messages[this.language].REQUEST_FAILED(response.status));
+    }
+
+    protected assertResponseSize(response: Response) {
+        if (this.maxResponseBytes === undefined) return;
+        const contentLength = response.headers.get("content-length");
+        if (!contentLength) return;
+        const size = Number(contentLength);
+        if (Number.isFinite(size) && size > this.maxResponseBytes) {
+            throw new Error(
+                messages[this.language].RESPONSE_TOO_LARGE(size, this.maxResponseBytes),
+            );
+        }
     }
 
     private async getToken(refresh?: boolean) {
@@ -295,20 +333,20 @@ class HttpClient {
         await new Promise(resolve => setTimeout(resolve, ms));
     }
 
-    private validateBaseURL(baseURL: string) {
-        if (!baseURL) {
+    private validateBaseUrl(baseUrl: string) {
+        if (!baseUrl) {
             throw new Error(messages[this.language].MISSING_BASE_URL);
         }
 
         let url: URL;
         try {
-            url = new URL(baseURL);
+            url = new URL(baseUrl);
         } catch {
-            throw new Error(messages[this.language].INVALID_BASE_URL(baseURL));
+            throw new Error(messages[this.language].INVALID_BASE_URL(baseUrl));
         }
 
         if (!["http:", "https:"].includes(url.protocol)) {
-            throw new Error(messages[this.language].INVALID_PROTOCOL(baseURL));
+            throw new Error(messages[this.language].INVALID_PROTOCOL(baseUrl));
         }
     }
 
@@ -318,12 +356,12 @@ class HttpClient {
         try {
             const encoded = contentDisposition.match(/filename\*\s*=\s*[^']*'[^']*'([^;\n]+)/i);
             if (encoded?.[1]) {
-                return decodeURIComponent(encoded[1]);
+                return this.sanitizeFilename(decodeURIComponent(encoded[1]));
             }
 
             const regular = contentDisposition.match(/filename\s*=\s*"?([^\";\n]+)"?/i);
             if (regular?.[1]) {
-                return regular[1];
+                return this.sanitizeFilename(regular[1]);
             }
 
             if (/filename/i.test(contentDisposition)) {
@@ -337,6 +375,15 @@ class HttpClient {
                 error,
             );
         }
+    }
+
+    private sanitizeFilename(name: string): string | undefined {
+        // Strip path separators and control characters so a malicious
+        // Content-Disposition can't yield "../etc/passwd" or null-byte
+        // terminated names. Consumers still must HTML-escape before
+        // rendering in the DOM.
+        const cleaned = name.replace(/[\x00-\x1f\x7f/\\]/g, "").trim();
+        return cleaned || undefined;
     }
 }
 
