@@ -99,18 +99,20 @@ class HttpClient {
         }, timeoutMs);
         const headers = await this.getHeaders({ data, customHeaders, authenticate });
 
-        const response = await fetch(this.baseURL + route, {
-            headers,
-            method,
-            mode: "cors",
-            referrer: "no-referrer",
-            signal: controller.signal,
-            ...(data && { body: this.getBody({ data }) }),
-        });
+        try {
+            const response = await fetch(this.baseURL + route, {
+                headers,
+                method,
+                mode: "cors",
+                referrer: "no-referrer",
+                signal: controller.signal,
+                ...(data && { body: this.getBody({ data }) }),
+            });
 
-        clearTimeout(id);
-
-        return response;
+            return response;
+        } finally {
+            clearTimeout(id);
+        }
     }
 
     protected async getHeaders(input: GetHeadersInput) {
@@ -237,7 +239,7 @@ class HttpClient {
             else if (data.msg && typeof data.msg === "string") msg = data.msg;
             else if (data.error && typeof data.error === "string") msg = data.error;
             else if (data.detail && typeof data.detail === "string") msg = data.detail;
-            else if (data.details && typeof data.details === "string") msg = data.detail;
+            else if (data.details && typeof data.details === "string") msg = data.details;
             else msg = JSON.stringify(data);
         } else {
             msg = await response.text();
