@@ -7,8 +7,8 @@ import constant from "./constant";
 const { DEFAULT_CLIENT_VERSION, SUPPORTED_FILE_TYPES, SUPPORTED_MEDIA_TYPES } = constant;
 
 class HttpClient {
-    public baseURL: string | null = null;
-    public language: LanguageCode = "en";
+    protected readonly baseURL!: string;
+    protected language: LanguageCode = "en";
 
     protected authType: "Bearer" = "Bearer";
     protected authInstance: Auth | null = null;
